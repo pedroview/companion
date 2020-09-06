@@ -4,66 +4,61 @@ import { StyleSheet, View } from "react-native";
 import { TextInput, Button, Caption } from "react-native-paper";
 
 import { editNote, deleteNote } from "../../source/store/actions";
+import { sleep } from "../../source/commonFunc";
 
-const AppIndex = ({ profile, note, navigation, editNote, deleteNote }) => {
+const AppIndex = ({ profile, route, navigation, editNote, deleteNote }) => {
   const { width } = profile;
-  // const {_id, body, priority, title}= note
-  const [title, setTitle] = useState("");
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [priority, setPriority] = useState("moderate");
-  const [body, setBody] = useState("");
-  const [loading, setLoading] = useState(false);
+  const note = route.params.note;
+  const { _id, body, dateCreated, title } = note || [];
 
-  const priorityList = [
-    { label: "Urgent", value: "urgent" },
-    { label: "Very Important", value: "very important" },
-    { label: "Moderate", value: "moderate" },
-    { label: "Petty", value: "petty" },
-  ];
-
+  const [newTitle, setNewTitle] = useState(title);
+  const [newBody, setNewBody] = useState(body);
+  const [deleting, setDeleting] = useState(false);
+  const [updating, setUpdating] = useState(false);
   return (
     <View style={{ ...styles.note, width }}>
       <View>
         <Caption>Title</Caption>
-        <TextInput maxLength={30} label="Title" mode="outlined" value={title} onChangeText={(title) => setTitle(title)} />
-
+        <TextInput maxLength={30} label="Title" mode="outlined" value={newTitle} onChangeText={(title) => setNewTitle(title)} />
         <Caption>Body</Caption>
         <TextInput
           label="Body"
           mode="outlined"
           multiline={true}
           numberOfLines={20}
-          value={body}
-          onChangeText={(body) => setBody(body)}
+          value={newBody}
+          onChangeText={(body) => setNewBody(body)}
         />
       </View>
-      <View style={{ marginVertical: 20 }}>
+      <View style={styles.button}>
         <Button
           mode="contained"
-          loading={loading}
+          loading={deleting}
+          color="#f33"
           labelStyle={{ color: "#fff" }}
           disabled={!body}
-          onPress={() => {
-            setLoading(true);
-            addNote({ title, priority, body });
-            setLoading(false);
-            navigation.navigate("Home");
-          }}>
-          save
-        </Button>
-
-        <Button
-          mode="contained"
-          loading={loading}
-          labelStyle={{ color: "#fff" }}
-          disabled={!body}
-          onPress={() => {
-            setLoading(true);
-            addNote({ title, priority, body });
-            setLoading(false);
-            navigation.navigate("Home");
+          onPress={async () => {
+            setDeleting(true);
+            await deleteNote({ _id, dateCreated });
+            await sleep(0.3);
+            setDeleting(false);
+            navigation.push("Home", { notesUpdated: `Note Updated, pls refresh @ ${Math.random() * 100}` });
           }}>
           delete
+        </Button>
+        <Button
+          mode="contained"
+          loading={updating}
+          labelStyle={{ color: "#fff" }}
+          disabled={!body}
+          onPress={async () => {
+            setUpdating(true);
+            await editNote({ newTitle, newBody, _id, dateCreated });
+            await sleep(0.3);
+            setUpdating(false);
+            navigation.navigate("Home", { notesUpdated: `Note Updated, pls refresh @ ${Math.random() * 100} ` });
+          }}>
+          save
         </Button>
       </View>
     </View>
@@ -76,11 +71,17 @@ const styles = StyleSheet.create({
     padding: 20,
     justifyContent: "space-between",
   },
+  button: {
+    flex: 1,
+    paddingHorizontal: 5,
+    paddingVertical: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
 });
 
 const mapStateToProps = (state) => ({
     profile: state.profile,
-    note: state.note.doc,
   }),
   mapDispatchToProps = {
     editNote,

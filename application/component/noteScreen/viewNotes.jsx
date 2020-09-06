@@ -1,110 +1,92 @@
 import { connect } from "react-redux";
-import { View } from "react-native";
+import { StyleSheet, View, Text } from "react-native";
 import React, { useState, useEffect } from "react";
-import { TouchableHighlight } from "react-native-gesture-handler";
-import { List, IconButton, Text, Title } from "react-native-paper";
-import GestureRecognizer, { swipeDirections } from "react-native-swipe-gestures";
+import { RectButton, FlatList } from "react-native-gesture-handler";
+import { IconButton, Divider } from "react-native-paper";
 
-import { getNotes } from "../../source/store/actions";
+import { getNotes, editPriority, deleteNote } from "../../source/store/actions";
+import SwipeableRowStyle from "../../source/SwipeableRowStyle";
 
 const AppIndex = (props) => {
-  const { profile, navigation, getNotes } = props;
-  const { width } = profile;
-  const [notes, setNotes] = useState([]);
-  const [expanded1, setExpanded1] = useState(true);
-  const [expanded2, setExpanded2] = useState(false);
-  const [expanded3, setExpanded3] = useState(false);
+  const { profile, navigation, getNotes, route, deleteNote, editPriority } = props,
+    { width, height } = profile,
+    [veryImportantList, setVeryImportantList] = useState([]),
+    [moderateList, setModerateList] = useState([]);
+  let notesRefresh = route?.params?.notesUpdated;
 
-  useEffect(() => {
-    getNotes();
-  }, []);
+  const notesList = (filter, notes) => {
+    notes = notes || [];
+    if (notes.length <= 0) return [];
+    const newNotes = notes.filter((x) => x && x.priority === filter);
+    if (newNotes.length <= 0) return [];
+    return newNotes.sort((x, y) => {
+      if (new Date(x.lastUpdate).getTime() > new Date(y.lastUpdate).getTime()) return -1;
+      if (new Date(x.lastUpdate).getTime() < new Date(y.lastUpdate).getTime()) return 1;
+      if (x.title.toLowerCase() < y.title.toLowerCase()) return -1;
+      if (x.title.toLowerCase() > y.title.toLowerCase()) return 1;
+    });
+  };
+
+  const SwipeableRow = ({ item, index }) => {
+    const { title, body, _id, dateCreated, lastUpdate, priority } = item;
+    return (
+      <SwipeableRowStyle
+        key={index}
+        _id={_id}
+        dateCreated={dateCreated}
+        navigation={navigation}
+        priority={priority}
+        deleteNote={deleteNote}
+        editPriority={editPriority}>
+        <RectButton style={styles.rectButton} onPress={() => navigation.navigate("Edit Note", { note: item })}>
+          <Text style={styles.fromText}>{title}</Text>
+          <Text numberOfLines={2} style={styles.messageText}>
+            {body}
+          </Text>
+          <Text style={styles.dateText}>{lastUpdate}</Text>
+        </RectButton>
+      </SwipeableRowStyle>
+    );
+  };
+
+  const setNotes = (notes) => {
+    setVeryImportantList(notesList("very important", notes));
+    setModerateList(notesList("moderate", notes));
+  };
 
   useEffect(() => {
     let mounted = true;
-    if (mounted) setNotes(props.notes);
+    if (mounted) {
+      getNotes();
+    }
+    return () => (mounted = false);
+  }, [notesRefresh]);
+  useEffect(() => {
+    let mounted = true;
+    if (mounted) {
+      setNotes(props.notes);
+    }
     return () => (mounted = false);
   }, [props.notes]);
 
-  // const onSwipeLeft = () => console.log(notes);
-  // const onSwipeRight = () => console.log(notes);
-  // const config = {
-  //   velocityThreshold: 0.3,
-  //   directionalOffsetThreshold: 80,
-  // };
-
-  const notesList = (notes, filter = "moderate") => {
-    if (!notes || (notes && notes.length <= 0)) return [];
-    notes = notes.filter((x) => x.priority === filter);
-    if (notes.length <= 0) return [];
-    const newNotes = () => {
-      notes = notes
-        .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated))
-        .map((x, index) => {
-          const { title, body, _id, lastUpdated } = x;
-          console.log("DFgfdwwwa");
-          return <List.Item title={title} />;
-          //               return "hey";
-          //               // return (
-          //               //   // <GestureRecognizer onSwipeLeft={() => onSwipeLeft} onSwipeRight={() => onSwipeRight} config={config}>
-          //               //   //   <TouchableHighlight
-          //               //   //     key={index}
-          //               //   //     underlayColor="rgb(255, 150, 40)"
-          //               //   //     //  onPress={() => navigation.navigate("Edit Note", { note: x })}
-          //               //   //     onLongPress={() => console.log("long presses", x)}
-          //               //   //     style={{
-          //               //   //       backgroundColor: "rgb(250, 255, 250)",
-          //               //   //       marginVertical: 3,
-          //               //   //       borderRadius: 10,
-          //               //   //       padding: 5,
-          //               //   //     }}>
-          //               //   //     <>
-          //               //   //       <Title>{title}</Title>
-          //               //   //       <Text numberOfLines={2}>{body}</Text>
-          //               //   //     </>
-          //               //   //   </TouchableHighlight>
-          //               //   // </GestureRecognizer>
-        });
-    };
-    return newNotes();
-  };
-
-  const moderateList = notesList(notes, "moderate");
-  console.log(moderateList);
-  //  notesList("very important");
-  // const pettyList = notesList("petty");
-
   return (
     <View style={{ flex: 1, width }}>
-      <List.Section>
-        <List.Accordion
-          title="Very Important"
-          titleStyle={{ color: "rgb(0, 0, 65)" }}
-          left={(props) => <List.Icon {...props} icon="folder" />}
-          expanded={expanded1}
-          onPress={() => setExpanded1(!expanded1)}>
-          {/* {notesList("very important")} */}
-        </List.Accordion>
-        {/* <List.Accordion
-          title="Moderate"
-          titleStyle={{ color: "rgb(255, 150, 40)" }}
-          left={(props) => <List.Icon {...props} icon="folder" />}
-          expanded={expanded2}
-          onPress={() => setExpanded2(!expanded2)}>
-          {moderateList}
-          <List.Item title="Last" />
-        </List.Accordion>
-        <List.Accordion
-          title="Petty Notes"
-          titleStyle={{ color: "green" }}
-          left={(props) => <List.Icon {...props} icon="folder" />}
-          expanded={expanded3}
-          onPress={() => setExpanded3(!expanded3)}>
-          {pettyList}
-        </List.Accordion> */}
-      </List.Section>
+      <FlatList
+        data={veryImportantList}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        renderItem={({ item, index }) => <SwipeableRow item={item} index={index} />}
+        keyExtractor={(item, index) => `key ${index}`}
+      />
+      <Divider />
+      <FlatList
+        data={moderateList}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        renderItem={({ item, index }) => <SwipeableRow item={item} index={index} />}
+        keyExtractor={(item, index) => `key ${index}`}
+      />
 
       <IconButton
-        style={{ position: "absolute", bottom: 5, right: 5 }}
+        style={{ position: "absolute", top: height - 250, right: 5 }}
         icon="comment-plus"
         color="rgb(255, 150, 40)"
         animated={true}
@@ -117,10 +99,42 @@ const AppIndex = (props) => {
   );
 };
 
+const styles = StyleSheet.create({
+  rectButton: {
+    flex: 1,
+    height: 80,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    justifyContent: "space-between",
+    flexDirection: "column",
+    backgroundColor: "white",
+  },
+  separator: {
+    backgroundColor: "rgb(200, 199, 204)",
+    height: StyleSheet.hairlineWidth,
+  },
+  fromText: {
+    fontWeight: "bold",
+    backgroundColor: "transparent",
+  },
+  messageText: {
+    color: "#999",
+    backgroundColor: "transparent",
+  },
+  dateText: {
+    backgroundColor: "transparent",
+    position: "absolute",
+    right: 20,
+    top: 10,
+    color: "#999",
+    fontWeight: "bold",
+  },
+});
+
 const mapStateToProps = (state) => ({
     profile: state.profile,
     notes: state.note.docs,
   }),
-  mapDispatchToProps = { getNotes };
+  mapDispatchToProps = { getNotes, editPriority, deleteNote };
 
 export default connect(mapStateToProps, mapDispatchToProps)(AppIndex);

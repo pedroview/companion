@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { connect } from "react-redux";
 import { View, ScrollView } from "react-native";
-import { TextInput, Button, Caption, TouchableRipple } from "react-native-paper";
+import { TextInput, Button, Caption } from "react-native-paper";
 
 import { addNote } from "../../source/store/actions";
 
@@ -42,7 +42,7 @@ const AppIndex = ({ profile, navigation, addNote }) => {
             setLoading(true);
             addNote({ title, body });
             setLoading(false);
-            navigation.navigate("Home");
+            navigation.navigate("Home", { notesUpdated: `Note Updated, pls refresh @ ${Math.random() * 1000} ` });
           }}>
           Next
         </Button>

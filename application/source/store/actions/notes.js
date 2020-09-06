@@ -1,4 +1,4 @@
-import { GET_NOTE, ADD_NOTE, GET_NOTES } from "../actionTypes";
+import { GET_NOTES } from "../actionTypes";
 import { addError, removeError } from "./error";
 
 const DataStore = require("react-native-local-mongodb"),
@@ -6,7 +6,7 @@ const DataStore = require("react-native-local-mongodb"),
 
 export const getNotes = () => {
   return async (dispatch) => {
-    await db.find({}, async (err, notes) => {
+    await db.findAsync({}, async (err, notes) => {
       if (err) {
         await dispatch(addError(err));
       } else {
@@ -20,40 +20,23 @@ export const getNotes = () => {
 export const addNote = ({ title, body }) => {
   return async (dispatch) => {
     const date = new Date().toDateString();
-
     const note = { title, body, priority: "moderate", dateCreated: date, lastUpdate: date };
-    await db.insert(note, async (err) => {
+    await db.insertAsync(note, async (err) => {
       if (err) {
         await dispatch(addError(err));
       } else {
-        await dispatch({ type: ADD_NOTE, payload: note });
         await dispatch(removeError());
       }
     });
   };
 };
 
-export const getNote = ({ title, id }) => {
+export const editNote = ({ newTitle, newBody, _id, dateCreated }) => {
   return async (dispatch) => {
-    await db.find({ title, id }, async (err, note) => {
-      if (err) {
-        await dispatch(addError(err));
-      } else {
-        const firstNote = note.length >= 1 ? note[0] : null;
-        await dispatch({ type: GET_NOTE, payload: firstNote });
-        await dispatch(removeError());
-      }
-    });
-  };
-};
-
-export const editNote = ({ oldTitle, oldId, note }) => {
-  return async (dispatch) => {
-    const date = new Date().toDateString();
-    const { title, priority, body } = note;
-    await db.update(
-      { title: oldTitle, id: oldId },
-      { $set: { title, priority, body, lastUpdate: date } },
+    const lastUpdate = new Date().toDateString();
+    await db.updateAsync(
+      { dateCreated, _id },
+      { $set: { title: newTitle, body: newBody, lastUpdate } },
       { multi: false },
       async (err, numUpd) => {
         if (err) {
@@ -65,10 +48,22 @@ export const editNote = ({ oldTitle, oldId, note }) => {
     );
   };
 };
-
-export const deleteNote = ({ title, id }) => {
+export const editPriority = ({ _id, dateCreated, priority }) => {
   return async (dispatch) => {
-    await db.remove({ title, id }, async (err, numUpd) => {
+    const lastUpdate = new Date().toDateString();
+    await db.updateAsync({ dateCreated, _id }, { $set: { priority, lastUpdate } }, { multi: false }, async (err, numUpd) => {
+      if (err) {
+        await dispatch(addError(err));
+      } else {
+        await dispatch(removeError());
+      }
+    });
+  };
+};
+
+export const deleteNote = ({ _id, dateCreated }) => {
+  return async (dispatch) => {
+    await db.removeAsync({ _id, dateCreated }, async (err, numUpd) => {
       if (err) {
         await dispatch(addError(err));
       } else {

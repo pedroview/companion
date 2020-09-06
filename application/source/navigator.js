@@ -40,9 +40,9 @@ const AppIndex = ({ profile }) => {
     ["Add Note", AddScreen, "Add Note"],
     ["Edit Note", EditScreen, "View or Edit Note"],
   ].map(([x, Y, z = companion], index) => {
-    const Component = ({ navigation }) => (
+    const Component = (props) => (
       <View style={styles}>
-        <Y navigation={navigation} />
+        <Y {...props} />
       </View>
     );
 
