@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Companion",
-    "slug": "pedroview-companion",
+    "slug": "companion",
     "platforms": ["ios", "android", "web"],
     "version": "1.0.0",
     "orientation": "portrait",
