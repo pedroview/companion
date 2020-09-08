@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Companion",
-    "slug": "companion",
+    "slug": "expo.io/pedroview/companion",
     "platforms": ["ios", "android", "web"],
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,7 +16,13 @@
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pedroview.companion",
+      "buildNumber": "1.0.0"
+    },
+    "android": {
+      "package": "com.pedroview.companion",
+      "versionCode": 1
     }
   }
 }
