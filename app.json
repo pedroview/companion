@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Companion",
-    "slug": "expo.io/pedroview/companion",
+    "slug": "pedroview-companion",
     "platforms": ["ios", "android", "web"],
     "version": "1.0.0",
     "orientation": "portrait",
@@ -23,6 +23,8 @@
     "android": {
       "package": "com.pedroview.companion",
       "versionCode": 1
-    }
+    },
+    "description": "Companion is a free App with no ads that let users keep notes",
+    "githubUrl": "https://github.com/pedroview/companion"
   }
 }
